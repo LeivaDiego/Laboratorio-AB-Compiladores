@@ -2,7 +2,7 @@
 
 class ShuntingYard:
 	
-	# Inicializa la lista de operadores validos
+	# Inicializa la lista de operadores validos 
 	def __init__(self):
 		self.binary_operators = ['|','.']
 		self.unary_operators = ['?', '+', '*']
@@ -21,7 +21,7 @@ class ShuntingYard:
 		}
 		return precedence.get(c, 0)
 
-	# Valida que la expresion este balanceada
+	# Valida que la expresion este balanceada 
 	def validate_parentheses(self, regex):
 		stack = []
 		for char in regex:
