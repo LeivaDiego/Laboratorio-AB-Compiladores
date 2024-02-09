@@ -4,7 +4,7 @@ class ShuntingYard:
     
     # Inicializa la lista de operadores validos
     def __init__(self):
-        self.binary_operators = ['|']
+        self.binary_operators = ['|','.']
         self.unary_operators = ['?', '+', '*']
         self.all_operators = self.binary_operators + self.unary_operators
         self.special_characters = ['(', ')', '.']
