@@ -156,7 +156,7 @@ class ShuntingYard:
         try:
             self.validate_expression(regex)
         except ValueError as e:
-            return str(e)
+            return False, str(e)
         
         postfix = []
         stack = []
@@ -179,4 +179,4 @@ class ShuntingYard:
         while stack:
             postfix.append(stack.pop())
 
-        return ''.join(postfix)
+        return True, ''.join(postfix)
