@@ -1,7 +1,7 @@
 from regex_parser import ShuntingYard
 from syntax_tree import SyntaxTree
 from nfa import match, Thompson, visualize_nfa
-from dfa import dfa_from_nfa, visualize_dfa, simulate_dfa
+from dfa import dfa_from_nfa, visualize_dfa, simulate_dfa, minimize_dfa
 
 def main():
 	# Crear una instancia de la clase ShuntingYard 
@@ -41,19 +41,24 @@ def main():
 
 		# Construccion y visualizacion de AFD a partir del AFN
 		dfa = dfa_from_nfa(nfa)
-		visualize_dfa(dfa)
+		visualize_dfa(dfa, "regular")
 		
 		# Solicitar al usuario que ingrese la cadena a comprobar
 		test_string = input("Ingresa la cadena a comprobar: ")
 		
 		# Comprobar si la cadena coincide con la expresión regular con AFN
-		matched = match(infix_regex, test_string, sy, nfa)
+		matched = simulate_dfa(dfa, test_string)
 		print("Evaluando cadena con AFD generado")
 		if matched:
 			print("La cadena coincide con la expresión regular.\n")
 		else:
 			print("La cadena NO coincide con la expresión regular.\n")
+			
+		# Minimizacion de AFD
+		minimized_dfa = minimize_dfa(dfa)
+		visualize_dfa(minimized_dfa, "minimizado")
 		
+
 	else:
 		print(f"Expresión Regular no válida: {postfix_regex}")
 
