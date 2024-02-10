@@ -17,7 +17,7 @@ def main():
 	if success:
 		# Imprimir el resultado
 		print(f"Expresión Regular Infix: {infix_regex}")
-		print(f"Expresión Regular Postfix: {postfix_regex}")
+		print(f"Expresión Regular Postfix: {postfix_regex}\n")
 	
 		# Construccion y visualizacion del arbol sintactico
 		root = st.build_tree(postfix_regex)
@@ -33,11 +33,11 @@ def main():
 		
 		# Comprobar si la cadena coincide con la expresión regular con AFN
 		matched = match(infix_regex, test_string, sy, nfa)
-		
+		print("Evaluando cadena con AFN generado")
 		if matched:
-			print("La cadena coincide con la expresión regular.")
+			print("La cadena coincide con la expresión regular.\n")
 		else:
-			print("La cadena NO coincide con la expresión regular.")
+			print("La cadena NO coincide con la expresión regular.\n")
 
 		# Construccion y visualizacion de AFD a partir del AFN
 		dfa = dfa_from_nfa(nfa)
@@ -47,12 +47,12 @@ def main():
 		test_string = input("Ingresa la cadena a comprobar: ")
 		
 		# Comprobar si la cadena coincide con la expresión regular con AFN
-		matched = simulate_dfa(dfa,test_string)
-		
+		matched = match(infix_regex, test_string, sy, nfa)
+		print("Evaluando cadena con AFD generado")
 		if matched:
-			print("La cadena coincide con la expresión regular.")
+			print("La cadena coincide con la expresión regular.\n")
 		else:
-			print("La cadena NO coincide con la expresión regular.")
+			print("La cadena NO coincide con la expresión regular.\n")
 		
 	else:
 		print(f"Expresión Regular no válida: {postfix_regex}")
