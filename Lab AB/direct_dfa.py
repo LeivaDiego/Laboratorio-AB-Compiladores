@@ -1,5 +1,6 @@
 from dfa import DFA
 
+# Clase DirectDFA para construir un DFA directamente a partir de un árbol sintáctico de una expresión regular.
 class DirectDFA:
 	def __init__(self, root):
 		self.root = root
@@ -9,11 +10,13 @@ class DirectDFA:
 		self.state_counter = 0
 		self.alphabet = set()  # Conjunto de símbolos del alfabeto
 
+	# Método principal para construir el DFA.
 	def build(self):
 		self.initialize_positions(self.root)
 		self.calculate_followpos(self.root)
 		self.construct_dfa()
 		
+	 # Determina si un conjunto de estados incluye el estado de aceptación.
 	def is_accept_state(self, state_set):
 		# Asume que el estado de aceptación incluye la posición del símbolo '#'
 		# Primero, encuentra la posición del símbolo '#' en el árbol sintáctico
@@ -22,6 +25,7 @@ class DirectDFA:
 		# Luego, verifica si el conjunto de estados (state_set) incluye esa posición
 		return accept_pos in state_set
 
+	# Asigna posiciones a los nodos del árbol y prepara los conjuntos followpos.
 	def initialize_positions(self, node, pos=[1]):
 		if node.value not in '*|.':
 			# Nodo hoja (operando)
@@ -34,6 +38,7 @@ class DirectDFA:
 			for child in node.children:
 				self.initialize_positions(child, pos)
 
+	 # Calcula los conjuntos followpos para cada nodo.
 	def calculate_followpos(self, node):
 		if node.value == '.':
 			# Concatenación: lastpos(n1) -> firstpos(n2)
@@ -50,6 +55,7 @@ class DirectDFA:
 		for child in node.children:
 			self.calculate_followpos(child)
 
+	# Obtiene los conjuntos firstpos y lastpos para un nodo.
 	def get_firstpos(self, node):
 		if node.value in '*|.':
 			if node.value == '*':
@@ -78,6 +84,7 @@ class DirectDFA:
 		else:
 			return {self.positions[node]}
 
+	# Verifica si un nodo puede derivar la cadena vacía.
 	def is_nullable(self, node):
 		if node.value == '*':
 			return True
@@ -88,6 +95,7 @@ class DirectDFA:
 		else:
 			return False
 
+	# Construye el DFA utilizando los conjuntos firstpos, lastpos y followpos.
 	def construct_dfa(self):
 		state_names = {}  # Mapea frozensets a nombres de estados
 		state_name_counter = [0]  # Usamos una lista para poder modificarlo dentro de get_state_name

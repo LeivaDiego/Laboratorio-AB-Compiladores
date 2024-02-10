@@ -1,73 +1,81 @@
 
 from graphviz import Digraph
 
+# Define la clase State para representar un estado en el NFA.
+# Cada estado puede tener etiquetas (para los estados iniciales y de aceptación) y hasta dos aristas de transición.
 class State:
 	def __init__(self, label=None, edge1=None, edge2=None):
-		self.label = label
-		self.edge1 = edge1
-		self.edge2 = edge2
+		self.label = label  # La etiqueta del estado (usualmente se usa para estados de aceptación o específicos).
+		self.edge1 = edge1  # Primera arista de transición desde este estado.
+		self.edge2 = edge2  # Segunda arista de transición (para NFA, donde un estado puede tener múltiples transiciones posibles).
 
+# Define la clase NFA, que representa un autómata finito no determinista.
+# Un NFA se define por un estado inicial y un estado de aceptación.
 class NFA:
 	def __init__(self, initial, accept):
-		self.initial = initial
-		self.accept = accept
+		self.initial = initial  # El estado inicial del NFA.
+		self.accept = accept  # El estado de aceptación del NFA.
 
+# La función Thompson realiza la construcción de Thompson para convertir una expresión regular en un NFA.
 def Thompson(postfix):
-	nfa_stack = []
+	nfa_stack = []  # Una pila para almacenar los NFA intermedios durante la construcción.
 
-	for c in postfix:
-		if c == '*':
+	for c in postfix:  # Itera sobre cada caracter en la expresión regular en forma posfija.
+		if c == '*':  # Operador de Kleene: Crea un NFA que acepta 0 o más repeticiones de la expresión anterior.
 			nfa1 = nfa_stack.pop()
 			initial, accept = State(), State()
 			initial.edge1, initial.edge2 = nfa1.initial, accept
 			nfa1.accept.edge1, nfa1.accept.edge2 = nfa1.initial, accept
 			nfa_stack.append(NFA(initial, accept))
-		elif c == '.':
+		elif c == '.':  # Concatenación: Une dos NFAs de la pila.
 			nfa2, nfa1 = nfa_stack.pop(), nfa_stack.pop()
 			nfa1.accept.edge1 = nfa2.initial
 			nfa_stack.append(NFA(nfa1.initial, nfa2.accept))
-		elif c == '|':
+		elif c == '|':  # Alternancia: Crea un NFA que acepta cualquiera de las dos expresiones anteriores.
 			nfa2, nfa1 = nfa_stack.pop(), nfa_stack.pop()
 			initial = State()
 			initial.edge1, initial.edge2 = nfa1.initial, nfa2.initial
 			accept = State()
 			nfa1.accept.edge1, nfa2.accept.edge1 = accept, accept
 			nfa_stack.append(NFA(initial, accept))
-		elif c == '+':
+		elif c == '+':  # Una o más repeticiones: Similar a '*', pero al menos una repetición es necesaria.
 			nfa1 = nfa_stack.pop()
 			initial, accept = State(), State()
 			initial.edge1 = nfa1.initial
 			nfa1.accept.edge1, nfa1.accept.edge2 = nfa1.initial, accept
 			nfa_stack.append(NFA(initial, accept))
-		elif c == '?':
+		elif c == '?':  # Opcional: La expresión anterior puede estar presente 0 o 1 vez.
 			nfa1 = nfa_stack.pop()
 			initial, accept = State(), State()
 			initial.edge1, initial.edge2 = nfa1.initial, accept
 			nfa1.accept.edge1 = accept
 			nfa_stack.append(NFA(initial, accept))
-		else:
+		else:  # Un caracter específico: Crea un NFA básico que acepta ese caracter.
 			accept, initial = State(), State()
 			initial.label, initial.edge1 = c, accept
 			nfa_stack.append(NFA(initial, accept))
 
-	return nfa_stack.pop()
+	return nfa_stack.pop()  # Retorna el NFA resultante.
 
-
+# La función followes obtiene el conjunto de todos los estados alcanzables desde un estado dado, incluido él mismo.
 def followes(state):
-	states = set()
-	states.add(state)
+	states = set()  # Inicializa un conjunto vacío para almacenar los estados.
+	states.add(state)  # Agrega el estado actual al conjunto.
 
+	# Si el estado no tiene etiqueta (no es un estado de aceptación), verifica sus transiciones.
 	if state.label is None:
 		if state.edge1 is not None:
-			states |= followes(state.edge1)
+			states |= followes(state.edge1)  # Agrega los estados alcanzables a través de la primera arista.
 		if state.edge2 is not None:
-			states |= followes(state.edge2)
+			states |= followes(state.edge2)  # Agrega los estados alcanzables a través de la segunda arista.
 
-	return states
+	return states  # Retorna el conjunto de estados alcanzables.
+
 
 
 def match(infix, string, shunting_yard, nfa):
-	# Usa la función infix_to_postfix de tu instancia ShuntingYard
+	# Simulador del AFN
+
 	success, postfix = shunting_yard.infix_to_postfix(infix)
 	if not success:
 		print("Error al convertir a postfix:", postfix)  # Manejo simplificado del error

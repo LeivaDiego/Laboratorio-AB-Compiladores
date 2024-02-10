@@ -1,35 +1,38 @@
 
 from graphviz import Digraph
 
+# Clase DFA para representar un Autómata Finito Determinista.
 class DFA:
 	def __init__(self):
-		self.states = []  # Lista de nombres de los estados del DFA
-		self.transitions = {}  # Diccionario de transiciones; clave: estado, valor: diccionario (clave: símbolo, valor: estado destino)
-		self.initial_state = None  # Estado inicial del DFA
-		self.accept_states = []  # Lista de estados de aceptación
-		self.alphabet = set()  # Conjunto de símbolos de entrada que el DFA puede aceptar
+		self.states = []  # Lista que almacena los nombres de los estados del DFA.
+		self.transitions = {}  # Diccionario para las transiciones; formato: {estado: {símbolo: estado_destino}}.
+		self.initial_state = None  # Almacena el estado inicial del DFA.
+		self.accept_states = []  # Lista que contiene los estados de aceptación del DFA.
+		self.alphabet = set()  # Conjunto de símbolos que el DFA puede procesar.
 
-
+	# Método para agregar un estado al DFA. 'is_accept' indica si es un estado de aceptación.
 	def add_state(self, state, is_accept=False):
 		if state not in self.states:
 			self.states.append(state)
 			self.transitions[state] = {}
 		if is_accept:
 			self.accept_states.append(state)
-			
-
+	
+	# Método para agregar una transición entre estados.
 	def add_transition(self, state_from, symbol, state_to):
 		if state_from in self.transitions:
 			self.transitions[state_from][symbol] = state_to
 			self.alphabet.add(symbol)
 
+	# Método para definir el estado inicial del DFA.
 	def set_initial_state(self, state):
 		self.initial_state = state
-		
 
+# Función para calcular el cierre epsilon de un conjunto de estados.
+# El cierre epsilon de un estado incluye al estado mismo y todos los estados alcanzables solo a través de transiciones epsilon.
 def epsilon_closure(states):
-	closure = set(states)
-	stack = list(states)
+	closure = set(states)  # Inicializa el cierre con los estados proporcionados.
+	stack = list(states)  # Utiliza una pila para explorar los estados.
 
 	while stack:
 		state = stack.pop()
@@ -42,7 +45,7 @@ def epsilon_closure(states):
 
 	return closure
 
-
+# Función para obtener el conjunto de estados a los que se puede llegar desde 'states' con el símbolo 'symbol'.
 def move(states, symbol):
 	result = set()
 	for state in states:
@@ -51,19 +54,22 @@ def move(states, symbol):
 				result.add(state.edge1)
 	return result
 
-
+# Función para convertir un NFA a DFA utilizando el algoritmo de construcción de subconjuntos.
 def dfa_from_nfa(nfa):
-	initial_closure = epsilon_closure({nfa.initial})
-	dfa = DFA()
-	initial_state_name = 'S0'
-	dfa.set_initial_state(initial_state_name)
+	initial_closure = epsilon_closure({nfa.initial})  # Calcula el cierre epsilon del estado inicial.
+	dfa = DFA()  # Crea un nuevo DFA.
+	initial_state_name = 'S0'  # Nombre para el estado inicial del DFA.
+	dfa.set_initial_state(initial_state_name)  # Establece el estado inicial del DFA.
+	# Verifica si el estado inicial debe ser de aceptación.
 	dfa.add_state(initial_state_name, is_accept=nfa.accept in initial_closure)
 
-	unprocessed_states = [(initial_state_name, initial_closure)]  # Lista de estados DFA no procesados
-	dfa_state_mapping = {frozenset(initial_closure): initial_state_name}  # Mapeo de conjuntos de estados NFA a nombres de estados DFA
+	# Lista de estados DFA pendientes de procesar.
+	unprocessed_states = [(initial_state_name, initial_closure)]
+	# Mapeo de conjuntos de estados NFA a nombres de estados DFA para evitar duplicados.
+	dfa_state_mapping = {frozenset(initial_closure): initial_state_name}
 
 	while unprocessed_states:
-		dfa_state_name, nfa_states = unprocessed_states.pop(0)  # Usa pop(0) para procesar en orden de llegada
+		dfa_state_name, nfa_states = unprocessed_states.pop(0)
 		for symbol in set(state.label for state in nfa_states if state.label):
 			target_nfa_states = move(nfa_states, symbol)
 			closure = epsilon_closure(target_nfa_states)
@@ -77,7 +83,8 @@ def dfa_from_nfa(nfa):
 
 			dfa.add_transition(dfa_state_name, symbol, dfa_state_mapping[closure_frozenset])
 
-	return dfa
+	return dfa  # Retorna el DFA resultante.
+
 
 
 def visualize_dfa(dfa, name):
@@ -128,129 +135,129 @@ def simulate_dfa(dfa, input_string):
 
 
 def build_minimized_dfa(dfa, partition_map, partitions):
-    """
-    Construye el DFA minimizado a partir de las particiones finales.
-    """
-    minimized_dfa = DFA()
-    state_name_map = {}  # Mapea índices de partición a nombres de nuevos estados
-    
-    # Crear nuevos estados en el DFA minimizado
-    for partition_index, partition in enumerate(partitions):
-        state_name = f"S{partition_index}"  # Nombre del nuevo estado
-        state_name_map[partition_index] = state_name
-        minimized_dfa.add_state(state_name, is_accept=any(state in dfa.accept_states for state in partition))
-    
-    # Establecer el estado inicial
-    for state in dfa.states:
-        if state == dfa.initial_state:
-            minimized_dfa.set_initial_state(state_name_map[partition_map[state]])
-            break
-    
-    # Definir las transiciones del DFA minimizado
-    for partition_index, partition in enumerate(partitions):
-        representative_state = partition[0]  # Tomar un estado representativo de la partición
-        for symbol in dfa.alphabet:
-            if representative_state in dfa.transitions and symbol in dfa.transitions[representative_state]:
-                target_state = dfa.transitions[representative_state][symbol]
-                minimized_dfa.add_transition(
-                    state_name_map[partition_index], 
-                    symbol, 
-                    state_name_map[partition_map[target_state]]
-                )
-                
-    return minimized_dfa
+	"""
+	Construye el DFA minimizado a partir de las particiones finales.
+	"""
+	minimized_dfa = DFA()
+	state_name_map = {}  # Mapea índices de partición a nombres de nuevos estados
+	
+	# Crear nuevos estados en el DFA minimizado
+	for partition_index, partition in enumerate(partitions):
+		state_name = f"S{partition_index}"  # Nombre del nuevo estado
+		state_name_map[partition_index] = state_name
+		minimized_dfa.add_state(state_name, is_accept=any(state in dfa.accept_states for state in partition))
+	
+	# Establecer el estado inicial
+	for state in dfa.states:
+		if state == dfa.initial_state:
+			minimized_dfa.set_initial_state(state_name_map[partition_map[state]])
+			break
+	
+	# Definir las transiciones del DFA minimizado
+	for partition_index, partition in enumerate(partitions):
+		representative_state = partition[0]  # Tomar un estado representativo de la partición
+		for symbol in dfa.alphabet:
+			if representative_state in dfa.transitions and symbol in dfa.transitions[representative_state]:
+				target_state = dfa.transitions[representative_state][symbol]
+				minimized_dfa.add_transition(
+					state_name_map[partition_index], 
+					symbol, 
+					state_name_map[partition_map[target_state]]
+				)
+				
+	return minimized_dfa
 
 def refine_partitions(dfa, partition_map, partitions):
-    changed = True
-    while changed:
-        changed = False
-        new_partitions = []
-        new_partition_map = {}
-        
-        for partition in partitions:
-            # Un diccionario para agrupar estados por las particiones de destino de sus transiciones
-            transition_groups = {}
-            
-            for state in partition:
-                # Clave para agrupar: una tupla de las particiones de destino para cada símbolo del alfabeto
-                # Maneja transiciones no definidas asignando un valor especial (por ejemplo, -1)
-                group_key = tuple(partition_map.get(dfa.transitions[state].get(symbol), -1) for symbol in sorted(dfa.alphabet))
-                
-                if group_key not in transition_groups:
-                    transition_groups[group_key] = []
-                transition_groups[group_key].append(state)
-            
-            if len(transition_groups) > 1:
-                changed = True
-            
-            for group in transition_groups.values():
-                new_partitions.append(group)
-                for state in group:
-                    new_partition_map[state] = len(new_partitions) - 1
-        
-        partitions = new_partitions
-        partition_map = new_partition_map
-    
-    return partition_map, partitions
+	changed = True
+	while changed:
+		changed = False
+		new_partitions = []
+		new_partition_map = {}
+		
+		for partition in partitions:
+			# Un diccionario para agrupar estados por las particiones de destino de sus transiciones
+			transition_groups = {}
+			
+			for state in partition:
+				# Clave para agrupar: una tupla de las particiones de destino para cada símbolo del alfabeto
+				# Maneja transiciones no definidas asignando un valor especial (por ejemplo, -1)
+				group_key = tuple(partition_map.get(dfa.transitions[state].get(symbol), -1) for symbol in sorted(dfa.alphabet))
+				
+				if group_key not in transition_groups:
+					transition_groups[group_key] = []
+				transition_groups[group_key].append(state)
+			
+			if len(transition_groups) > 1:
+				changed = True
+			
+			for group in transition_groups.values():
+				new_partitions.append(group)
+				for state in group:
+					new_partition_map[state] = len(new_partitions) - 1
+		
+		partitions = new_partitions
+		partition_map = new_partition_map
+	
+	return partition_map, partitions
 
 
 def initial_partition(dfa):
-    """
-    Crea particiones iniciales del DFA basadas en estados de aceptación y no aceptación.
-    Retorna un diccionario que mapea cada estado a su partición correspondiente y
-    una lista de particiones para mantener un registro de los grupos actuales.
-    """
-    partition_map = {}  # Mapea cada estado a su partición (0 o 1)
-    partitions = [[], []]  # [0] para no aceptadores, [1] para aceptadores
-    
-    for state in dfa.states:
-        if state in dfa.accept_states:
-            partition_map[state] = 1  # Estado de aceptación
-            partitions[1].append(state)
-        else:
-            partition_map[state] = 0  # Estado no aceptador
-            partitions[0].append(state)
-    
-    return partition_map, partitions
+	"""
+	Crea particiones iniciales del DFA basadas en estados de aceptación y no aceptación.
+	Retorna un diccionario que mapea cada estado a su partición correspondiente y
+	una lista de particiones para mantener un registro de los grupos actuales.
+	"""
+	partition_map = {}  # Mapea cada estado a su partición (0 o 1)
+	partitions = [[], []]  # [0] para no aceptadores, [1] para aceptadores
+	
+	for state in dfa.states:
+		if state in dfa.accept_states:
+			partition_map[state] = 1  # Estado de aceptación
+			partitions[1].append(state)
+		else:
+			partition_map[state] = 0  # Estado no aceptador
+			partitions[0].append(state)
+	
+	return partition_map, partitions
 
 def remove_unreachable_states(dfa):
-    """
-    Elimina los estados inalcanzables de un DFA dado.
-    """
-    reachable_states = set()
-    stack = [dfa.initial_state]  # Comienza con el estado inicial
-    while stack:
-        state = stack.pop()
-        if state not in reachable_states:
-            reachable_states.add(state)
-            # Asume que `dfa.transitions` es un diccionario donde las claves son los estados
-            # y los valores son diccionarios de transiciones (clave: símbolo, valor: estado destino).
-            if state in dfa.transitions:
-                for symbol in dfa.transitions[state]:
-                    next_state = dfa.transitions[state][symbol]
-                    if next_state not in reachable_states:
-                        stack.append(next_state)
+	"""
+	Elimina los estados inalcanzables de un DFA dado.
+	"""
+	reachable_states = set()
+	stack = [dfa.initial_state]  # Comienza con el estado inicial
+	while stack:
+		state = stack.pop()
+		if state not in reachable_states:
+			reachable_states.add(state)
+			# Asume que `dfa.transitions` es un diccionario donde las claves son los estados
+			# y los valores son diccionarios de transiciones (clave: símbolo, valor: estado destino).
+			if state in dfa.transitions:
+				for symbol in dfa.transitions[state]:
+					next_state = dfa.transitions[state][symbol]
+					if next_state not in reachable_states:
+						stack.append(next_state)
 
-    # Actualiza el DFA para mantener solo los estados alcanzables y sus transiciones
-    dfa.states = [state for state in dfa.states if state in reachable_states]
-    dfa.transitions = {state: transitions for state, transitions in dfa.transitions.items() if state in reachable_states}
-    dfa.accept_states = [state for state in dfa.accept_states if state in reachable_states]
+	# Actualiza el DFA para mantener solo los estados alcanzables y sus transiciones
+	dfa.states = [state for state in dfa.states if state in reachable_states]
+	dfa.transitions = {state: transitions for state, transitions in dfa.transitions.items() if state in reachable_states}
+	dfa.accept_states = [state for state in dfa.accept_states if state in reachable_states]
 
 
 def minimize_dfa(dfa):
-    """
-    Función que encapsula los pasos de minimización de un DFA.
-    """
-    # Paso 1: Eliminar estados inalcanzables
-    remove_unreachable_states(dfa)
-    
-    # Paso 2: Crear particiones iniciales
-    partition_map, partitions = initial_partition(dfa)
-    
-    # Paso 3: Refinar particiones
-    partition_map, partitions = refine_partitions(dfa, partition_map, partitions)
-    
-    # Paso 4: Construir el DFA minimizado
-    minimized_dfa = build_minimized_dfa(dfa, partition_map, partitions)
-    
-    return minimized_dfa
+	"""
+	Función que encapsula los pasos de minimización de un DFA.
+	"""
+	# Paso 1: Eliminar estados inalcanzables
+	remove_unreachable_states(dfa)
+	
+	# Paso 2: Crear particiones iniciales
+	partition_map, partitions = initial_partition(dfa)
+	
+	# Paso 3: Refinar particiones
+	partition_map, partitions = refine_partitions(dfa, partition_map, partitions)
+	
+	# Paso 4: Construir el DFA minimizado
+	minimized_dfa = build_minimized_dfa(dfa, partition_map, partitions)
+	
+	return minimized_dfa
