@@ -2,6 +2,7 @@ from regex_parser import ShuntingYard
 from syntax_tree import SyntaxTree
 from nfa import match, Thompson, visualize_nfa
 from dfa import dfa_from_nfa, visualize_dfa, simulate_dfa, minimize_dfa
+from direct_dfa import DirectDFA
 
 def main():
 	# Crear una instancia de la clase ShuntingYard 
@@ -29,10 +30,10 @@ def main():
 		visualize_nfa(nfa.initial, nfa.accept)
 		
 		# Solicitar al usuario que ingrese la cadena a comprobar
-		test_string = input("Ingresa la cadena a comprobar: ")
+		test_string1 = input("Ingresa la cadena a comprobar: ")
 		
 		# Comprobar si la cadena coincide con la expresión regular con AFN
-		matched = match(infix_regex, test_string, sy, nfa)
+		matched = match(infix_regex, test_string1, sy, nfa)
 		print("Evaluando cadena con AFN generado")
 		if matched:
 			print("La cadena coincide con la expresión regular.\n")
@@ -44,10 +45,10 @@ def main():
 		visualize_dfa(dfa, "regular")
 		
 		# Solicitar al usuario que ingrese la cadena a comprobar
-		test_string = input("Ingresa la cadena a comprobar: ")
+		test_string2 = input("Ingresa la cadena a comprobar: ")
 		
 		# Comprobar si la cadena coincide con la expresión regular con AFN
-		matched = simulate_dfa(dfa, test_string)
+		matched = simulate_dfa(dfa, test_string2)
 		print("Evaluando cadena con AFD generado")
 		if matched:
 			print("La cadena coincide con la expresión regular.\n")
@@ -57,6 +58,15 @@ def main():
 		# Minimizacion de AFD
 		minimized_dfa = minimize_dfa(dfa)
 		visualize_dfa(minimized_dfa, "minimizado")
+		
+		# Construccion directa de AFD
+		print("Construcción directa del AFD a partir del árbol sintáctico.")
+		# Convertir la expresion regular infix a postfix, incluyendo el símbolo de fin
+		success, postfix_regex = sy.infix_to_postfix(infix_regex + '#')
+		root_dic = st.build_tree(postfix_regex)
+		direct_dfa = DirectDFA(root_dic)
+		direct_dfa.build()
+		visualize_dfa(direct_dfa.dfa, "directo")
 		
 
 	else:
