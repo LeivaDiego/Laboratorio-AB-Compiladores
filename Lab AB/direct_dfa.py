@@ -89,25 +89,40 @@ class DirectDFA:
 			return False
 
 	def construct_dfa(self):
+		state_names = {}  # Mapea frozensets a nombres de estados
+		state_name_counter = [0]  # Usamos una lista para poder modificarlo dentro de get_state_name
+
+		def get_state_name(state_set):
+			# Devuelve un nombre de estado existente o genera uno nuevo
+			if state_set not in state_names:
+				# Accedemos al contador usando state_name_counter[0]
+				state_names[state_set] = f'S{state_name_counter[0]}'
+				state_name_counter[0] += 1
+			return state_names[state_set]
+
 		initial_state = frozenset(self.get_firstpos(self.root))
-		self.dfa.add_state(str(initial_state), is_accept=self.is_accept_state(initial_state))
-		self.dfa.set_initial_state(str(initial_state))
+		self.dfa.add_state(get_state_name(initial_state), is_accept=self.is_accept_state(initial_state))
+		self.dfa.set_initial_state(get_state_name(initial_state))
 		unmarked_states = [initial_state]
 		marked_states = set()
+
 		while unmarked_states:
 			S = unmarked_states.pop()
 			marked_states.add(S)
 			for a in self.alphabet:
 				move = set()
 				for pos in S:
+					# Asegurarse de que se refiere al valor correcto y no al nodo directamente
 					if pos in self.positions.values() and a == list(self.positions.keys())[list(self.positions.values()).index(pos)].value:
 						move.update(self.followpos[pos])
 				U = frozenset(move)
-				if U and U not in marked_states and U not in unmarked_states:
-					self.dfa.add_state(str(U), is_accept=self.is_accept_state(U))
+				if U not in marked_states and U not in unmarked_states:
+					self.dfa.add_state(get_state_name(U), is_accept=self.is_accept_state(U))
 					unmarked_states.append(U)
 				if U:
-					self.dfa.add_transition(str(S), a, str(U))
+					self.dfa.add_transition(get_state_name(S), a, get_state_name(U))
+
+
 
 	def is_accept_state(self, state_set):
 		# Asume que el estado de aceptación es el último nodo hoja añadido
